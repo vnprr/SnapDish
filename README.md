@@ -337,3 +337,9 @@ Zwraca listę posiłków (z polami: id, name, calories, time, image)
 ## 6. Uwagi końcowe
 
 Jest to pierwsza i bardzo poglądowa wersja aplikacji, która zapewnia podstawową funkcjonalność.
+
+---
+
+# Uczenie Maszynowe
+
+
