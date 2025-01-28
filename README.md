@@ -196,4 +196,144 @@ uvicorn <nazwa_pliku>:app --reload
 
 4. Mechanizm przechowywania obrazów w bazie Firestore (w polu `image`) jest mało optymalny przy większej skali. Najlepszym rozwiązaniem jest przechowywanie plików w **Firebase Storage** lub podobnym rozwiązaniu i trzymanie jedynie linków do nich.
 
-Rozszerzalność: Aplikacja demonstruje główne koncepcje — w projekcie produkcyjnym warto dodać np. obsługę wyjątków, logowanie, ograniczenia i sprawdzanie zapytań, poprawić zapytania, ujednolicić nazwy parametrów i zmiennych, etc.
+Rozszerzalność: Aplikacja serwera demonstruje główne koncepcje — w projekcie produkcyjnym warto dodać np. obsługę wyjątków, logowanie, ograniczenia i sprawdzanie zapytań, poprawić zapytania, ujednolicić nazwy parametrów i zmiennych, etc.
+
+---
+
+# Aplikacja Mobilna (React Native)
+
+Poniższa dokumentacja opisuje przykładową aplikację React Native. Aplikacja obsługuje logowanie, rejestrowanie, wykonywanie zdjęć, klasyfikację potraw (w oparciu o endpoint serwera) oraz tworzenie i przeglądanie posiłków wraz z ich kaloriami.
+
+---
+
+## 1. Wprowadzenie
+
+Aplikacja pozwala użytkownikom:
+
+- **Logować się** i **rejestrować** (endpointy serwera).
+- **Tworzyć** posiłki (z nazwą, kaloriami i zdjęciem).
+- **Przeglądać** posiłki zebrane w bazie (z podziałem na daty, kalorie, itp.).
+- **Robić zdjęcia** w aplikacji i przesyłać je do serwera w celu **klasyfikacji** (dostajemy przewidywaną klasę potrawy i przybliżoną wartość kaloryczną).
+- **Nawigować** pomiędzy ekranami (Home, Camera, Meal Creation itp.) za pomocą **React Navigation**.
+
+---
+
+## 2. Struktura plików
+
+Poniżej uproszczona struktura projektu (część plików konfiguracyjnych pominięta):
+
+```
+├── app
+│ ├── screens
+│ │ ├── LoginScreen.tsx
+│ │ ├── HomeScreen.tsx
+│ │ ├── CameraScreen.tsx
+│ │ └── MealCreationScreen.tsx
+│ ├── services
+│ │ ├── auth.ts
+│ │ ├── add_meal.ts
+│ │ ├── classify_image.ts
+│ │ └── meals.ts
+│ ├── styles
+│ │ └── style.ts
+│ ├── types
+│ │ └── index.ts
+│ └── config.ts
+└── ...
+```
+
+- **AppNavigator.tsx** – definiuje nawigację pomiędzy ekranami.
+- **LoginScreen.tsx** – ekran logowania i rejestracji.
+- **HomeScreen.tsx** – główny ekran z listą posiłków.
+- **CameraScreen.tsx** – pozwala na zrobienie zdjęcia i klasyfikację.
+- **MealCreationScreen.tsx** – pozwala na stworzenie nowego posiłku (nazwa, kalorie itp.).
+- **services** – pliki komunikujące się z serwerem (autentykacja, tworzenie/odczyt posiłków, klasyfikacja).
+- **config.ts** – przechowuje np. adres serwera (`SERVER_URL`).
+
+---
+
+## 3. Wymagania i konfiguracja
+
+- **Node.js**
+- **React Native**
+- W projekcie używane są m.in.:
+  - `expo-camera`, `expo-file-system`
+  - `react-navigation`
+  - `luxon` (do obsługi dat)
+- W pliku **`config.ts`** należy określić adres serwera `SERVER_URL`, np.:
+```
+export const SERVER_URL = 'http://192.168.0.10:8000';
+```
+
+---
+
+## 4. Główne ekrany aplikacji
+
+### AppNavigator
+
+*    Stack.Navigator – definiuje stos ekranów.
+*    Aplikacja startuje na ekranie "Login".
+*    Nazwy ekranów to "Login", "Home", "CameraScreen", "MealCreationScreen".
+
+### CameraScreen
+
+*    Wykorzystuje CameraView z expo-camera do robienia zdjęcia.
+*    Po zrobieniu zdjęcia (takePhoto) plik jest zapisywany lokalnie (FileSystem), a następnie wysyłany do serwera przez classifyImage.
+*    Po uzyskaniu wyniku klasyfikacji (klasa i przybliżone kalorie) można przejść do ekranu MealCreationScreen.
+
+### HomeScreen
+
+*    Wyświetla listę posiłków pobranych z serwera (getMeals).
+*    Grupuje posiłki według daty i pokazuje łączną liczbę kalorii.
+*    Zawiera przycisk przenoszący do CameraScreen w celu dodania nowego zdjęcia/posiłku.
+
+### LoginScreen
+
+*    Pozwala się zalogować (funkcja login) lub zarejestrować (register).
+*    Po poprawnym logowaniu zapisuje authToken w AsyncStorage i przenosi na ekran Home.
+
+### MealCreationScreen
+
+*    Przyjmuje w parametrze photoUri i wynik klasyfikacji (klasa, kalorie).
+*    Użytkownik może zmienić nazwę, wprowadzić kalorie, ustawić datę/godzinę.
+*    Po zapisaniu do serwera (addMeal) wraca na ekran Home.
+
+## 5. Usługi (services)
+
+### addMeal
+
+worzy FormData z plikiem zdjęcia (photoUri) i danymi posiłku
+
+Wysyła zapytanie POST /add-meal do serwera z tokenem w nagłówku
+
+### auth
+
+#### login
+
+Wysyła POST /token (username & password).
+
+Zwraca access_token (ID użytkownika).
+
+#### register
+
+Wysyła POST /register (email & password).
+
+### classifyImage
+
+Wysyła POST /classify z danymi obrazu (FormData)
+
+Oczekuje w odpowiedzi predicted_class, estimated_calories
+
+### getMeals
+
+Wysyła GET /meals (token w nagłówku)
+
+Dekoduje zdjęcia (base64) i zapisuje je w plikach lokalnych
+
+Zwraca listę posiłków (z polami: id, name, calories, time, image) 
+
+---
+
+## 6. Uwagi końcowe
+
+Jest to pierwsza i bardzo poglądowa wersja aplikacji, która zapewnia podstawową funkcjonalność.
