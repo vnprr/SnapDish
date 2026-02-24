@@ -1,8 +1,5 @@
 # Serwer
-SUML
-Poniższa dokumentacja opisuje aplikację serwera stworzoną przy użyciu FastAPI oraz integracji z Firebase (Firestore). Aplikacja zawiera m.in. mechanizmy rejestracji użytkownika, logowania, zarządzania posiłkami i składnikami oraz moduł do klasyfikacji i przewidywania kalorii ze zdjęcia. 
-
----
+Projekt zaliczeniowy z SUML
 
 ## 1. Wprowadzenie
 Aplikacja pozwala na:
